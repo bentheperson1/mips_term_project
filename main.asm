@@ -5,6 +5,7 @@ x_prompt: .asciiz "\nEnter the x-coordinate of your origin (0 - 5): "
 y_prompt: .asciiz "Enter the y-coordinate of your origin: (0 - 5) "
 dir_prompt: .asciiz "Enter the direction you want to move in (u, d, l, r): "
 
+dir_input: .space 8     # small buffer for "u\n" style input + null terminator
 
 new_board_space: .asciiz "\n\n\n\n" 
 
@@ -53,7 +54,7 @@ game_loop:
 	li   $v0, SysReadInt    	# syscall code for reading an integer
 	syscall                  	# print grid[row][col]
 	
-	addu $s0, $v0, $zero
+	addu $s1, $v0, $zero
 	
 	
 	# take in y coord
@@ -64,19 +65,33 @@ game_loop:
 	li   $v0, SysReadInt    	# syscall code for reading an integer
 	syscall                  	# print grid[row][col]
 	
-	addu $s1, $v0, $zero
+	addu $s0, $v0, $zero
+	
+	
+	move $a0, $s0
+	move $a1, $s1
+	jal  verify_starting_position
+	
+	beqz $v0, game_loop
 	
 	
 	# take in move direction
-	li   $v0, SysPrintString 	# syscall code for printing a string
-	la   $a0, dir_prompt          	# a0 = address of space string
-	syscall                  	# print separating space
+	li   $v0, SysPrintString
+	la   $a0, dir_prompt
+	syscall
+
+	li   $v0, SysReadString
+	la   $a0, dir_input      # a0 = address of OUR buffer, not the prompt string
+	li   $a1, 8               # a1 = max chars to read (matches buffer size)
+	syscall
+
+	la   $s2, dir_input       # store the buffer's ADDRESS, not $v0
 	
-	li   $v0, SysReadString   	# syscall code for reading a string
-	syscall                  	# print grid[row][col]
+	move $a0, $s0
+	move $a1, $s1
+	li $a2, 8
 	
-	addu $s2, $v0, $zero
-	
+	jal set_element
 	
 	# create space for printing new game state
 	li   $v0, SysPrintString 	# syscall code for printing a string
@@ -84,16 +99,11 @@ game_loop:
 	syscall                  	# print separating space
 	
 	
-	
-	# TEST: set whatever coords we input to 9
-	la $a0, ($s0)
-	la $a1, ($s1)
-	li $a2, 9
-	jal set_element
-	
-	
 	jal  print_grid
 	
+	j game_loop
 	
 	li $v0, SysExit
 	syscall
+
+

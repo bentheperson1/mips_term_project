@@ -6,12 +6,14 @@ space:   .asciiz " "      # single space, used as a separator when printing
 newline: .asciiz "\n"     # newline, used to end each printed row
 
 game_board_prompt: .asciiz "Behold, the game board:\n"
+invalid_start_pos_prompt: .asciiz "Your start position is invalid. Try again.\n"
 
 .text
 .globl reset_game_board
 .globl set_element
 .globl get_element
 .globl print_grid
+.globl verify_starting_position
 
 # reset_game_board()
 # writes a diagonal pattern of values into the grid
@@ -90,6 +92,39 @@ get_element:
 	lw   $v0, 0($t3)        # load value at that address into return register
 	jr   $ra                # return to caller
 
+
+# verify_starting_position(row, col)
+# $a0 = row, $a1 = col
+# returns value in $v0
+verify_starting_position:
+	addi $sp, $sp, -4
+	sw   $ra, 0($sp)         # save caller's return address
+
+	blt  $a0, 0, invalid_start    # row < 0 is out of bounds
+	bge  $a0, 6, invalid_start    # row > 5 is out of bounds
+	blt  $a1, 0, invalid_start    # col < 0 is out of bounds
+	bge  $a1, 6, invalid_start    # col > 5 is out of bounds
+
+	jal  get_element          # $v0 = grid[row][col]; safe now, $ra is saved
+
+	move $t0, $v0             # stash the value before it can get clobbered
+	beqz $t0, invalid_start
+
+valid_start:
+	li   $v0, 1               # return flag: valid
+	j    verify_starting_position_done
+
+invalid_start:
+	li   $v0, SysPrintString # syscall code for printing a string
+	la   $a0, invalid_start_pos_prompt   # a0 = address of prompt string
+	syscall                  # print invalid message
+
+	li   $v0, 0               # return flag: invalid
+
+verify_starting_position_done:
+	lw   $ra, 0($sp)
+	addi $sp, $sp, 4
+	jr   $ra
 
 # print_grid()
 # prints the full 6x6 grid, space-separated with one row per line
