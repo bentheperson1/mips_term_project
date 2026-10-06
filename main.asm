@@ -5,6 +5,7 @@
 x_prompt: .asciiz "\nEnter the x-coordinate of your origin (0 - 5): "
 y_prompt: .asciiz "Enter the y-coordinate of your origin: (0 - 5) "
 dir_prompt: .asciiz "Enter the direction you want to move in (u, d, l, r, ur, ul, dr, dl): "
+invalid_start_pos_prompt: .asciiz "Your start position is invalid. Try again.\n"
 invalid_move_prompt: .asciiz "That move is invalid. Try again.\n"
 dir_input: .space 12     # small buffer for move direction
 
@@ -18,7 +19,7 @@ down_left_input: .asciiz "dl\n"
 up_right_input: .asciiz "ur\n"
 up_left_input: .asciiz "ul\n"
 
-new_board_space: .asciiz "\n\n\n\n"
+new_board_space: .asciiz "\n\n"
 
 .align 2
 
@@ -87,7 +88,7 @@ game_loop:
 	move $a1, $s1
 	jal  verify_starting_position
 
-	beqz $v0, game_loop
+	beqz $v0, start_invalid
 
 
 	# take in move direction
@@ -140,39 +141,12 @@ game_loop:
 
 direction_done:
 	# create space for printing new game state
-	li   $v0, SysPrintString
-	la   $a0, new_board_space
-	syscall
+	print_str(new_board_space)
 
-	# value at the origin cell
-	get_cell($t2, grid, $s0, $s1)    # $t2 = origin value
+	# the board decides if the move is legal and applies it
+	attempt_move($s0, $s1, $s4, $s3)
 
-	# target cell = origin + direction offset
-	add  $t0, $s0, $s4               # new row = row + y offset
-	add  $t1, $s1, $s3               # new col = col + x offset
-
-	# stay on the board
-	blt  $t0, 0, move_invalid
-	bge  $t0, 6, move_invalid
-	blt  $t1, 0, move_invalid
-	bge  $t1, 6, move_invalid
-
-	# target must be empty
-	get_cell($t4, grid, $t0, $t1)
-	bnez $t4, move_invalid
-
-	# new cell = origin + 1
-	addi $t3, $t2, 1
-	set_cell(grid, $t0, $t1, $t3)
-	
-	# link origin to the new cell
-	move $a0, $s0
-	move $a1, $s1
-	add  $a2, $s0, $s4
-	add  $a3, $s1, $s3
-	jal  set_link
-
-	j    redraw
+	bnez $v0, redraw
 
 
 move_invalid:
@@ -180,6 +154,12 @@ move_invalid:
 
 redraw:
 	jal  print_board
+
+	j    game_loop
+
+
+start_invalid:
+	print_str(invalid_start_pos_prompt)
 
 	j    game_loop
 
@@ -223,5 +203,3 @@ input_is_up_left:
 	li   $s3, -1             # x ofs = -1
 	li   $s4, -1             # y ofs = -1
 	j    direction_done
-	
-
