@@ -1,6 +1,6 @@
-.eqv BOARD_SIZE 3
-.eqv GRID_BYTES 36		# BOARD_SIZE * BOARD_SIZE * 4
-.eqv EDGE_BYTES 48		# (BOARD_SIZE + 1) * BOARD_SIZE * 4
+.eqv BOARD_SIZE 6
+.eqv GRID_BYTES 144		# BOARD_SIZE * BOARD_SIZE * 4
+.eqv EDGE_BYTES 168		# (BOARD_SIZE + 1) * BOARD_SIZE * 4
 
 # calls try_move with the origin cell and the direction offsets
 # arguments are registers
@@ -61,6 +61,19 @@
 	add  $a0, $a0, $t4
 	li   $v0, SysPrintString
 	syscall
+.end_macro
+
+.macro irandom_range (%dest, %min, %max)
+        li $v0, SysRandIntRange
+        li $a0, 0           # Select random number generator 0
+        
+        # Calculate range size: upper - lower + 1
+        li $a1, %max        
+        subi $a1, $a1, %min
+        addi $a1, $a1, 1    # $a1 = (max - min + 1)
+        syscall             # Returns random number in $v0 from 0 to ($a1 - 1)
+        
+        add %dest, $v0, %min # Shift range up by lower bound (%min)
 .end_macro
 
 # print entry %idx (a register) of a table of 4-byte strings, where %table is a register holding the table's address

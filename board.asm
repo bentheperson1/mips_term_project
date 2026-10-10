@@ -11,7 +11,7 @@ d_links:	.space EDGE_BYTES	# 7x6, 1 = "/", 2 = "\" on junction right of column c
 owners:		.space GRID_BYTES	# 6x6 bools
 board_end:				# end of all arrays (used by clear_board)
 
-header:		.asciiz "\n\n    0   1   2   \n"
+header:		.asciiz "\n\n    0   1   2   3   4   5   \n"
 border_start:	.asciiz "  +"
 row_wall:	.asciiz " |"
 newline:	.asciiz "\n"
@@ -89,35 +89,50 @@ reset_game_board:
 	li   $t0, 0
 	li   $t1, 0
 	li   $t2, 1
-	li   $t3, 1
+	li   $t3, 0
 	set_cell(grid, $t0, $t1, $t2)
 	set_cell(owners, $t0, $t1, $t3)
 
-	li   $t0, 0
-	li   $t1, 1
-	li   $t2, 2
-	li   $t3, 1
-	set_cell(grid, $t0, $t1, $t2)
-	set_cell(owners, $t0, $t1, $t3)
-	
 	li   $t0, 1
-	li   $t1, 2
-	li   $t2, 1
-	li   $t3, 0
-	set_cell(grid, $t0, $t1, $t2)
-	set_cell(owners, $t0, $t1, $t3)
-
-	li   $t0, 2
 	li   $t1, 1
 	li   $t2, 2
 	li   $t3, 0
 	set_cell(grid, $t0, $t1, $t2)
 	set_cell(owners, $t0, $t1, $t3)
 	
+	li   $t0, 2
+	li   $t1, 2
+	li   $t2, 3
+	li   $t3, 0
+	set_cell(grid, $t0, $t1, $t2)
+	set_cell(owners, $t0, $t1, $t3)
+
+	li   $t0, 3
+	li   $t1, 3
+	li   $t2, 3
+	li   $t3, 1
+	set_cell(grid, $t0, $t1, $t2)
+	set_cell(owners, $t0, $t1, $t3)
+	
+	li   $t0, 4
+	li   $t1, 4
+	li   $t2, 2
+	li   $t3, 1
+	set_cell(grid, $t0, $t1, $t2)
+	set_cell(owners, $t0, $t1, $t3)
+	
+	li   $t0, 5
+	li   $t1, 5
+	li   $t2, 1
+	li   $t3, 1
+	set_cell(grid, $t0, $t1, $t2)
+	set_cell(owners, $t0, $t1, $t3)
 	
 	# starting links
-	link_cells(0, 0, 0, 1)
-	link_cells(1, 2, 2, 1)
+	link_cells(0, 0, 1, 1)
+	link_cells(1, 1, 2, 2)
+	link_cells(3, 3, 4, 4)
+	link_cells(4, 4, 5, 5)
 	
 	lw   $ra, 0($sp)
 	addi $sp, $sp, 4
@@ -135,6 +150,9 @@ verify_starting_position:
 
 	get_cell($v0, grid, $a0, $a1)
 	beqz $v0, start_invalid
+
+	get_cell($t4, owners, $a0, $a1)
+	bnez $t4, start_invalid
 
 	li   $v0, 1
 	jr   $ra

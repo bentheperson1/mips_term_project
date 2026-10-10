@@ -50,6 +50,18 @@ _done:
 
 
 main:
+	# Get system time
+	li $v0, SysGetTime         # Syscall 30: Get system time
+	syscall            # $a0 contains the low-order 32 bits of time
+
+	# Set seed
+	move $a1, $a0      # Move time value to $a1 (seed)
+	li $a0, 0          # Seed RNG 0
+	li $v0, SysRandSeed         # Syscall 40: Set seed
+	syscall
+	
+	irandom_range($t0, 0, 100)
+
 	# Set up game state (clear_board + starting numbers)
 	jal  reset_game_board
 

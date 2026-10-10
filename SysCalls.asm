@@ -10,7 +10,7 @@
 	.eqv	SysReadFloat	6
 	.eqv	SysReadDouble	7
 	.eqv	SysReadString	8
-	.eqv	SysAlloc	9
+	.eqv	SysAlloc		9
 	.eqv	SysExit		10
 	.eqv	SysPrintChar	11
 	.eqv	SysReadChar	12
@@ -19,7 +19,9 @@
 	.eqv	SysWriteFile	15
 	.eqv	SysCloseFile	16
 	.eqv	SysExitValue	17
-	.eqv	SysPrintIntHex  34
+	.eqv	SysPrintIntHex   34
 	.eqv	SysPrintIntBin	35
 	.eqv	SysRandInt	41
-	.eqv	SysRandIntRange 42	
+	.eqv	SysRandIntRange  42	
+	.eqv 	SysRandSeed 	40
+	.eqv	SysGetTime	30
